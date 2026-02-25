@@ -10,12 +10,11 @@ import {
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { signInAction } from "@/app/account/actions";
+import { registerAction } from "@/app/account/actions";
 
-export function LoginForm({
+export function RegisterForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
@@ -32,7 +31,7 @@ export function LoginForm({
     const form = e.currentTarget;
     const formData = new FormData(form);
     formData.set("callbackUrl", callbackUrl);
-    const result = await signInAction(formData);
+    const result = await registerAction(formData);
     setLoading(false);
     if (result?.error) {
       setError(result.error);
@@ -52,9 +51,9 @@ export function LoginForm({
     >
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Login to your account</h1>
+          <h1 className="text-2xl font-bold">Create an account</h1>
           <p className="text-muted-foreground text-sm text-balance">
-            Enter your email below to login to your account
+            Enter your details below to register
           </p>
         </div>
         {error && (
@@ -62,6 +61,17 @@ export function LoginForm({
             {error}
           </p>
         )}
+        <Field>
+          <FieldLabel htmlFor="name">Name (optional)</FieldLabel>
+          <Input
+            id="name"
+            name="name"
+            type="text"
+            placeholder="Your name"
+            autoComplete="name"
+            className="bg-background"
+          />
+        </Field>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
           <Input
@@ -75,37 +85,42 @@ export function LoginForm({
           />
         </Field>
         <Field>
-          <div className="flex items-center">
-            <FieldLabel htmlFor="password">Password</FieldLabel>
-            <a
-              href="#"
-              className="ml-auto text-sm underline-offset-4 hover:underline"
-            >
-              Forgot your password?
-            </a>
-          </div>
+          <FieldLabel htmlFor="password">Password</FieldLabel>
           <Input
             id="password"
             name="password"
             type="password"
-            autoComplete="current-password"
+            autoComplete="new-password"
             required
+            minLength={8}
+            className="bg-background"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            At least 8 characters
+          </p>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="confirmPassword">Confirm password</FieldLabel>
+          <Input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
             className="bg-background"
           />
         </Field>
         <Field>
           <Button type="submit" disabled={loading}>
-            {loading ? "Signing in…" : "Login"}
+            {loading ? "Creating account…" : "Create account"}
           </Button>
         </Field>
-        <FieldSeparator className="*:data-[slot=field-separator-content]:bg-muted dark:*:data-[slot=field-separator-content]:bg-card">
-          Or continue with
-        </FieldSeparator>
         <Field>
           <FieldDescription className="text-center">
-            Don&apos;t have an account?{" "}
-            <Link href="/register" className="underline underline-offset-4">
-              Sign up
+            Already have an account?{" "}
+            <Link href="/login" className="underline underline-offset-4">
+              Sign in
             </Link>
           </FieldDescription>
         </Field>

@@ -36,7 +36,7 @@ export const authConfig = {
           return null;
         const email = String(credentials.email).trim().toLowerCase();
         const user = await prisma.user.findUnique({ where: { email } });
-        if (!user || user.role !== "admin") return null;
+        if (!user) return null;
         const ok = await bcrypt.compare(
           String(credentials.password),
           user.passwordHash
