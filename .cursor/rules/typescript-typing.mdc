@@ -1,0 +1,41 @@
+---
+description: Use proper types and minimize any
+globs: **/*.ts,**/*.tsx
+alwaysApply: false
+---
+
+# TypeScript: Prefer Proper Types, Avoid any
+
+- Prefer explicit, accurate types over `any`. Use `unknown` when the type is truly unknown, then narrow with type guards or assertions.
+- Use generics for reusable functions and components instead of `any` for parameters or return types.
+- Type function parameters and return values; avoid leaving them implicit or using `any`.
+- For third-party or untyped data, add minimal interfaces or use `unknown` and narrow before use.
+
+## Examples
+
+```typescript
+// ❌ BAD
+function parse(data: any) {
+  return data.items;
+}
+const handler = (e: any) => e.preventDefault();
+
+// ✅ GOOD
+function parse<T extends { items: unknown[] }>(data: T): T['items'] {
+  return data.items;
+}
+const handler = (e: React.MouseEvent) => e.preventDefault();
+```
+
+```typescript
+// ❌ BAD
+let value: any = fetchSomething();
+
+// ✅ GOOD
+let value: unknown = fetchSomething();
+if (typeof value === 'string') {
+  value; // string
+}
+```
+
+When adding new code or refactoring, choose the most precise type that fits (union types, generics, branded types) and only use `any` when there is no practical alternative, and then add a short comment explaining why.
