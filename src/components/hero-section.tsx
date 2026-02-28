@@ -6,30 +6,29 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const SLIDES = [
-  {
-    src: "https://images.unsplash.com/photo-1558089687-f282ffcbc126?w=1920&q=80",
-    alt: "Over-ear headphones on a dark surface",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=1920&q=80",
-    alt: "Headphones with carrying case",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=1920&q=80",
-    alt: "Gaming headset on desk",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=1920&q=80",
-    alt: "White wireless headphones",
-  },
+const FALLBACK_SLIDES = [
+  { src: "https://images.unsplash.com/photo-1558089687-f282ffcbc126?w=1920&q=80", alt: "Over-ear headphones on a dark surface" },
+  { src: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=1920&q=80", alt: "Headphones with carrying case" },
+  { src: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=1920&q=80", alt: "Gaming headset on desk" },
+  { src: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=1920&q=80", alt: "White wireless headphones" },
 ];
 
 const INTERVAL = 5000;
 
-export function HeroSection() {
+export interface HeroSlide {
+  src: string;
+  alt: string;
+}
+
+interface HeroSectionProps {
+  /** Up to 4 slides from the database (product images). Falls back to default imagery if empty. */
+  slides?: HeroSlide[];
+}
+
+export function HeroSection({ slides: slidesProp }: HeroSectionProps) {
+  const slides = slidesProp?.length ? slidesProp : FALLBACK_SLIDES;
   const [current, setCurrent] = useState(0);
-  const total = SLIDES.length;
+  const total = slides.length;
 
   const next = useCallback(() => {
     setCurrent((c) => (c + 1) % total);
@@ -47,8 +46,8 @@ export function HeroSection() {
       className="relative flex h-dvh w-full flex-col justify-between overflow-hidden"
       aria-label="Hero"
     >
-      {/* Full-bleed landscape images */}
-      {SLIDES.map((slide, i) => (
+      {/* Full-bleed landscape images (from DB when provided) */}
+      {slides.map((slide, i) => (
         <div
           key={slide.src}
           className={cn(

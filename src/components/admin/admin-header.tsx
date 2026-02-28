@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MenuIcon } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { MenuIcon, LogOut } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,12 +17,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 const routeLabels: Record<string, string> = {
   "/admin": "Dashboard",
   "/admin/products/new": "Add product",
+  "/admin/slides": "Hero slides",
 };
 
 export function AdminHeader() {
@@ -45,7 +48,15 @@ export function AdminHeader() {
             <Link href="/admin/products/new">Add product</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
+            <Link href="/admin/slides">Hero slides</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link href="/">Store</Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })} className="gap-2">
+            <LogOut className="size-4" />
+            Sign out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

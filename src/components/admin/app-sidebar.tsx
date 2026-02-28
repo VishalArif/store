@@ -2,16 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   LayoutDashboardIcon,
   PackagePlusIcon,
   StoreIcon,
+  ImageIcon,
+  LogOut,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboardIcon },
   { href: "/admin/products/new", label: "Add product", icon: PackagePlusIcon },
+  { href: "/admin/slides", label: "Hero slides", icon: ImageIcon },
   { href: "/", label: "Store", icon: StoreIcon },
 ];
 
@@ -53,6 +58,17 @@ export function AppSidebar() {
           );
         })}
       </nav>
+      <div className="border-t border-sidebar-border p-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          onClick={() => signOut({ callbackUrl: "/" })}
+        >
+          <LogOut className="size-4" />
+          Sign out
+        </Button>
+      </div>
     </aside>
   );
 }

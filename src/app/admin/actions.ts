@@ -178,3 +178,45 @@ export async function deleteProductAction(productId: string): Promise<{ error?: 
     return { error: "Failed to delete product." };
   }
 }
+
+// ——— Hero slides ———
+
+export async function createHeroSlideAction(formData: FormData): Promise<{ error?: string }> {
+  const authError = await requireAdmin();
+  if (authError.error) return authError;
+
+  const imageUrl = formData.get("imageUrl");
+  const alt = formData.get("alt");
+  if (!imageUrl || typeof imageUrl !== "string" || !imageUrl.trim()) {
+    return { error: "Image URL is required." };
+  }
+
+  const count = await prisma.heroSlide.count();
+  await prisma.heroSlide.create({
+    data: {
+      imageUrl: imageUrl.trim(),
+      alt: alt && typeof alt === "string" ? alt.trim() : "",
+      sortOrder: count,
+    },
+  });
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/admin/slides");
+  return {};
+}
+
+export async function deleteHeroSlideAction(slideId: string): Promise<{ error?: string }> {
+  const authError = await requireAdmin();
+  if (authError.error) return authError;
+
+  try {
+    await prisma.heroSlide.delete({ where: { id: slideId } });
+    revalidatePath("/");
+    revalidatePath("/admin");
+    revalidatePath("/admin/slides");
+    return {};
+  } catch (e) {
+    console.error("Delete hero slide error:", e);
+    return { error: "Failed to delete slide." };
+  }
+}

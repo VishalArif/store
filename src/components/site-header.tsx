@@ -147,7 +147,7 @@ export function SiteHeader() {
               {totalItems > 0 && (
                 <span
                   className={cn(
-                    "absolute -right-0.5 -top-0.5 flex size-4 min-w-4 items-center justify-center rounded-full text-[10px] font-medium",
+                    "absolute -right-0.5 -top-0.5 flex size-4 min-w-4 items-center justify-center rounded-full text-[10px] font-medium leading-none tabular-nums",
                     isHome
                       ? "bg-white text-primary"
                       : "bg-primary text-primary-foreground"

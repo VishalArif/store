@@ -5,16 +5,24 @@ import { HeroSection } from "@/components/hero-section";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { getFeaturedProducts } from "@/lib/products";
+import { getHeroSlides } from "@/lib/hero-slides";
 
 export default async function HomePage() {
-  const featuredProducts = await getFeaturedProducts();
+  const [featuredProducts, heroSlidesFromDb] = await Promise.all([
+    getFeaturedProducts(),
+    getHeroSlides(),
+  ]);
+  const heroSlides = heroSlidesFromDb.map((s) => ({
+    src: s.imageUrl,
+    alt: s.alt || "Hero slide",
+  }));
 
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
 
       <main>
-        <HeroSection />
+        <HeroSection slides={heroSlides} />
 
         {/* Products appear when user scrolls down */}
         <section
