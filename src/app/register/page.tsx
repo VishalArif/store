@@ -1,15 +1,19 @@
-"use client";
-
 import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { RegisterForm } from "@/components/register-form";
 import { Headphones } from "lucide-react";
 
 const COVER_IMAGE =
   "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1200&q=80";
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
+  const session = await auth();
+  if (session?.user) {
+    redirect(session.user.role === "admin" ? "/admin" : "/account");
+  }
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">

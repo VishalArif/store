@@ -22,6 +22,9 @@ export function AddProductForm() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [mainImageUrl, setMainImageUrl] = useState<string>("");
+  const [additionalImageUrls, setAdditionalImageUrls] = useState<string[]>([]);
+  const [uploadingExtra, setUploadingExtra] = useState(false);
+  const extraFileInputRef = useRef<HTMLInputElement>(null);
   const [colors, setColors] = useState<{ name: string; hex: string }[]>([
     { name: "", hex: "#000000" },
   ]);
@@ -45,6 +48,27 @@ export function AddProductForm() {
     }
     if (result.url) setMainImageUrl(result.url);
     e.target.value = "";
+  }
+
+  async function handleExtraImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingExtra(true);
+    setError(null);
+    const formData = new FormData();
+    formData.set("file", file);
+    const result = await uploadImageAction(formData);
+    setUploadingExtra(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    if (result.url) setAdditionalImageUrls((prev) => [...prev, result.url!]);
+    e.target.value = "";
+  }
+
+  function removeExtraImage(index: number) {
+    setAdditionalImageUrls((prev) => prev.filter((_, i) => i !== index));
   }
 
   function addColor() {
@@ -76,6 +100,9 @@ export function AddProductForm() {
     const form = e.currentTarget;
     const formData = new FormData(form);
     formData.set("image", mainImageUrl);
+    if (additionalImageUrls.length > 0) {
+      formData.set("images", additionalImageUrls.join(","));
+    }
     formData.set(
       "colors",
       JSON.stringify(colors.filter((c) => c.name.trim()))
@@ -202,9 +229,9 @@ export function AddProductForm() {
               }
             }}
             className={cn(
-              "flex min-h-[160px] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition-colors",
+              "flex min-h-[160px] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition-colors overflow-hidden",
               mainImageUrl
-                ? "border-primary/50 bg-primary/5"
+                ? "border-primary/50 bg-primary/5 p-2"
                 : "border-border bg-muted/30 hover:border-primary/40 hover:bg-muted/50",
               uploading && "pointer-events-none opacity-60"
             )}
@@ -213,7 +240,11 @@ export function AddProductForm() {
               <p className="text-sm text-muted-foreground">Uploading…</p>
             ) : mainImageUrl ? (
               <>
-                <p className="text-sm font-medium text-foreground">Image uploaded</p>
+                <img
+                  src={mainImageUrl}
+                  alt="Preview"
+                  className="max-h-[200px] w-auto max-w-full rounded-lg object-contain"
+                />
                 <p className="text-xs text-muted-foreground">Click to replace</p>
               </>
             ) : (
@@ -238,6 +269,70 @@ export function AddProductForm() {
             />
           </Field>
           <input type="hidden" name="image" value={mainImageUrl} />
+        </CardContent>
+      </Card>
+
+      {/* Additional images (gallery) */}
+      <Card className="border-border">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-serif text-lg font-semibold">
+            Additional images (optional)
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Upload more images for the product gallery. These appear on the product page.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-0">
+          <input
+            ref={extraFileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleExtraImageUpload}
+            disabled={uploadingExtra}
+            className="sr-only"
+          />
+          {additionalImageUrls.length > 0 && (
+            <div className="flex flex-wrap gap-3">
+              {additionalImageUrls.map((url, i) => (
+                <div
+                  key={`${url}-${i}`}
+                  className="relative rounded-lg border border-border overflow-hidden bg-muted/30"
+                >
+                  <img
+                    src={url}
+                    alt={`Gallery ${i + 1}`}
+                    className="h-24 w-24 object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-1 right-1 size-6 rounded-full opacity-90"
+                    onClick={() => removeExtraImage(i)}
+                    aria-label="Remove image"
+                  >
+                    <Trash2 className="size-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => extraFileInputRef.current?.click()}
+            disabled={uploadingExtra}
+            className="gap-2"
+          >
+            {uploadingExtra ? (
+              "Uploading…"
+            ) : (
+              <>
+                <Plus className="size-4" />
+                Add image
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
 

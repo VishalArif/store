@@ -8,6 +8,7 @@ import {
   PackagePlusIcon,
   StoreIcon,
   ImageIcon,
+  ShoppingBag,
   LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboardIcon },
+  { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { href: "/admin/products/new", label: "Add product", icon: PackagePlusIcon },
   { href: "/admin/slides", label: "Hero slides", icon: ImageIcon },
   { href: "/", label: "Store", icon: StoreIcon },

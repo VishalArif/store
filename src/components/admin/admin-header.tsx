@@ -23,13 +23,17 @@ import {
 
 const routeLabels: Record<string, string> = {
   "/admin": "Dashboard",
+  "/admin/orders": "Orders",
   "/admin/products/new": "Add product",
   "/admin/slides": "Hero slides",
 };
 
 export function AdminHeader() {
   const pathname = usePathname();
-  const pageLabel = routeLabels[pathname] ?? "Dashboard";
+  const pageLabel =
+    pathname.startsWith("/admin/orders/") && pathname !== "/admin/orders"
+      ? "Order details"
+      : routeLabels[pathname] ?? "Dashboard";
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background px-4">
@@ -43,6 +47,9 @@ export function AdminHeader() {
         <DropdownMenuContent align="start" className="w-48">
           <DropdownMenuItem asChild>
             <Link href="/admin">Dashboard</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/admin/orders">Orders</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/admin/products/new">Add product</Link>

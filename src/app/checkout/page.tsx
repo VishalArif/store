@@ -10,14 +10,17 @@ import { Label } from "@/components/ui/label";
 import { useCart } from "@/context/cart-context";
 import { formatPricePKR } from "@/lib/format-price";
 import { cn } from "@/lib/utils";
+import { createOrderAction } from "@/app/checkout/actions";
 
 const SHIPPING_COD = 300;
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
   const [shipping, setShipping] = useState<"bank" | "cod">("bank");
-  const [billing, setBilling] = useState<"same" | "different">("same");
   const [complete, setComplete] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const shippingCost = shipping === "cod" ? SHIPPING_COD : 0;
   const total = subtotal + shippingCost;
@@ -41,9 +44,29 @@ export default function CheckoutPage() {
     );
   }
 
-  function handleCompleteOrder(e: React.FormEvent) {
+  async function handleCompleteOrder(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError(null);
+    setLoading(true);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const itemsForOrder = items.map((item) => ({
+      productId: item.productId,
+      name: item.name,
+      slug: item.slug,
+      image: item.image,
+      price: item.price,
+      quantity: item.quantity,
+      variant: item.variant,
+    }));
+    const result = await createOrderAction(formData, itemsForOrder, shipping);
+    setLoading(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
     clearCart();
+    if (result.orderId) setOrderId(result.orderId);
     setComplete(true);
   }
 
@@ -55,6 +78,11 @@ export default function CheckoutPage() {
           <h1 className="mb-4 font-serif text-2xl font-semibold">
             Thank you for your order
           </h1>
+          {orderId && (
+            <p className="mb-2 text-sm font-medium text-foreground">
+              Order #{orderId.slice(-6).toUpperCase()}
+            </p>
+          )}
           <p className="text-muted-foreground">
             We&apos;ll send you a confirmation email shortly.
           </p>
@@ -80,6 +108,11 @@ export default function CheckoutPage() {
         </h1>
 
         <form onSubmit={handleCompleteOrder}>
+          {error && (
+            <div className="mb-6 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
           <div className="flex flex-col gap-12 lg:flex-row lg:gap-16">
             {/* Left: form */}
             <div className="flex-1 space-y-8">
@@ -98,6 +131,7 @@ export default function CheckoutPage() {
                   <Label htmlFor="email">Email or mobile phone number</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     placeholder="Email or mobile phone number"
                     required
@@ -118,6 +152,7 @@ export default function CheckoutPage() {
                     <Label htmlFor="country">Country/Region</Label>
                     <select
                       id="country"
+                      name="country"
                       required
                       className="mt-1 h-9 w-full appearance-none rounded-lg border border-input bg-transparent pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0"
                       style={{
@@ -134,36 +169,36 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="first">First name</Label>
-                      <Input id="first" required className="mt-1" />
+                      <Input id="first" name="firstName" required className="mt-1" />
                     </div>
                     <div>
                       <Label htmlFor="last">Last name</Label>
-                      <Input id="last" required className="mt-1" />
+                      <Input id="last" name="lastName" required className="mt-1" />
                     </div>
                   </div>
                   <div>
                     <Label htmlFor="address">Address</Label>
-                    <Input id="address" required className="mt-1" />
+                    <Input id="address" name="address" required className="mt-1" />
                   </div>
                   <div>
                     <Label htmlFor="apt">
                       Apartment, suite, etc. (optional)
                     </Label>
-                    <Input id="apt" className="mt-1" />
+                    <Input id="apt" name="apartment" className="mt-1" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="city">City</Label>
-                      <Input id="city" required className="mt-1" />
+                      <Input id="city" name="city" required className="mt-1" />
                     </div>
                     <div>
                       <Label htmlFor="postal">Postal code (optional)</Label>
-                      <Input id="postal" className="mt-1" />
+                      <Input id="postal" name="postalCode" className="mt-1" />
                     </div>
                   </div>
                   <div>
                     <Label htmlFor="phone">Phone</Label>
-                    <Input id="phone" type="tel" required className="mt-1" />
+                    <Input id="phone" name="phone" type="tel" required className="mt-1" />
                   </div>
                   <label className="flex items-center gap-2 text-sm">
                     <input type="checkbox" className="rounded border-border" />
@@ -172,9 +207,9 @@ export default function CheckoutPage() {
                 </div>
               </section>
 
-              {/* Shipping method */}
+              {/* Payment method */}
               <section>
-                <h2 className="mb-4 text-lg font-semibold">Shipping method</h2>
+                <h2 className="mb-4 text-lg font-semibold">Payment method</h2>
                 <div className="space-y-3">
                   <label
                     className={cn(
@@ -227,44 +262,8 @@ export default function CheckoutPage() {
                 </div>
               </section>
 
-              {/* Payment */}
-              <section>
-                <h2 className="mb-2 text-lg font-semibold">Payment</h2>
-                <p className="mb-4 text-sm text-muted-foreground">
-                  All transactions are secure and encrypted.
-                </p>
-                <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-                  As per shipping method selected.
-                </div>
-              </section>
-
-              {/* Billing address */}
-              <section>
-                <h2 className="mb-4 text-lg font-semibold">Billing address</h2>
-                <div className="space-y-3">
-                  <label className="flex cursor-pointer items-center gap-3">
-                    <input
-                      type="radio"
-                      name="billing"
-                      checked={billing === "same"}
-                      onChange={() => setBilling("same")}
-                    />
-                    Same as shipping address
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-3">
-                    <input
-                      type="radio"
-                      name="billing"
-                      checked={billing === "different"}
-                      onChange={() => setBilling("different")}
-                    />
-                    Use a different billing address
-                  </label>
-                </div>
-              </section>
-
-              <Button type="submit" size="lg" className="w-full">
-                Complete order
+              <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                {loading ? "Placing order…" : "Complete order"}
               </Button>
 
               <Link

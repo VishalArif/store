@@ -220,3 +220,32 @@ export async function deleteHeroSlideAction(slideId: string): Promise<{ error?: 
     return { error: "Failed to delete slide." };
   }
 }
+
+// ——— Orders ———
+
+const ORDER_STATUSES = ["pending", "processing", "shipped", "delivered"] as const;
+
+export async function updateOrderStatusAction(
+  orderId: string,
+  status: string
+): Promise<{ error?: string }> {
+  const authError = await requireAdmin();
+  if (authError.error) return authError;
+
+  if (!ORDER_STATUSES.includes(status as (typeof ORDER_STATUSES)[number])) {
+    return { error: "Invalid status." };
+  }
+
+  try {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status },
+    });
+    revalidatePath("/admin/orders");
+    revalidatePath(`/admin/orders/${orderId}`);
+    return {};
+  } catch (e) {
+    console.error("Update order status error:", e);
+    return { error: "Failed to update order status." };
+  }
+}

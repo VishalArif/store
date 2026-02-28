@@ -14,24 +14,38 @@ interface SearchOverlayProps {
   onClose: () => void;
 }
 
+const SEARCH_DEBOUNCE_MS = 300;
+
 export function SearchOverlay({ open, onClose }: SearchOverlayProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
 
   const hasQuery = query.trim().length > 0;
 
+  // Debounce the search query
   useEffect(() => {
-    const q = query.trim();
-    if (!q) {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setDebouncedQuery("");
+      return;
+    }
+    const id = setTimeout(() => setDebouncedQuery(trimmed), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [query]);
+
+  // Fetch when debounced query changes
+  useEffect(() => {
+    if (!debouncedQuery) {
       setResults([]);
       return;
     }
     const ac = new AbortController();
     setSearchLoading(true);
-    fetch(`/api/products/search?q=${encodeURIComponent(q)}`, {
+    fetch(`/api/products/search?q=${encodeURIComponent(debouncedQuery)}`, {
       signal: ac.signal,
     })
       .then((res) => res.json())
@@ -39,12 +53,13 @@ export function SearchOverlay({ open, onClose }: SearchOverlayProps) {
       .catch(() => setResults([]))
       .finally(() => setSearchLoading(false));
     return () => ac.abort();
-  }, [query]);
+  }, [debouncedQuery]);
 
-  // Suggestions: show the query and first product name if any
+  // Suggestions: show the query and first product name if any (use debounced for results)
   const suggestions = hasQuery
     ? [query.trim(), ...results.slice(0, 2).map((p) => p.name)]
     : [];
+  const showLoading = hasQuery && (query.trim() !== debouncedQuery || searchLoading);
 
   useEffect(() => {
     if (open) {
@@ -90,33 +105,23 @@ export function SearchOverlay({ open, onClose }: SearchOverlayProps) {
       >
       <div className="flex w-full items-center gap-2">
         <div className="flex flex-1 items-center rounded-lg border border-border bg-background shadow-lg">
+          <span className="py-2 pl-3 pr-2 text-muted-foreground">
+            <Search className="size-5" />
+          </span>
           <input
             ref={inputRef}
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search"
-            className="min-w-0 flex-1 bg-transparent px-4 py-3 text-base outline-none placeholder:text-muted-foreground"
+            className="min-w-0 flex-1 bg-transparent px-2 py-3 text-base outline-none placeholder:text-muted-foreground"
             autoComplete="off"
           />
-          {query.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setQuery("")}
-              className="p-2 text-muted-foreground hover:text-foreground"
-              aria-label="Clear"
-            >
-              <X className="size-4" />
-            </button>
-          )}
-          <span className="border-l border-border py-2 pl-2 pr-3 text-muted-foreground">
-            <Search className="size-5" />
-          </span>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="flex size-10 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:text-foreground"
+          className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-foreground/70 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           aria-label="Close search"
         >
           <X className="size-5" />
@@ -126,65 +131,86 @@ export function SearchOverlay({ open, onClose }: SearchOverlayProps) {
       {/* Dropdown panel */}
       {hasQuery && (
         <div className="mt-0 flex w-full max-w-2xl flex-col overflow-hidden rounded-b-lg border border-t-0 border-border bg-background shadow-lg">
-          {suggestions.length > 0 && (
-            <div className="border-b border-border px-4 py-3">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Suggestions
-              </p>
-              <ul className="space-y-1">
-                {[...new Set(suggestions)].slice(0, 3).map((s, i) => (
-                  <li key={i}>
-                    <button
-                      type="button"
-                      className="w-full text-left text-sm text-foreground hover:bg-muted/50"
-                      onClick={() => {
-                        setQuery(s);
-                        inputRef.current?.focus();
-                      }}
-                    >
-                      {s}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {results.length > 0 && (
+          {showLoading ? (
             <div className="px-4 py-3">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Products
               </p>
               <ul className="space-y-2">
-                {results.slice(0, 4).map((product) => (
-                  <li key={product.id}>
-                    <Link
-                      href={`/products/${product.slug}`}
-                      onClick={onClose}
-                      className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-muted/50"
-                    >
-                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
-                        <Image
-                          src={product.image}
-                          alt={product.imageAlt}
-                          fill
-                          sizes="48px"
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">
-                          {product.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatPricePKR(product.price)}
-                        </p>
-                      </div>
-                    </Link>
+                {[1, 2, 3].map((i) => (
+                  <li key={i} className="flex items-center gap-3 rounded-md p-2">
+                    <div className="size-12 shrink-0 animate-pulse rounded-md bg-muted" />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="h-3.5 w-3/4 animate-pulse rounded bg-muted" />
+                      <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+                    </div>
                   </li>
                 ))}
               </ul>
             </div>
+          ) : (
+            <>
+              {suggestions.length > 0 && (
+                <div className="border-b border-border px-4 py-3">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Suggestions
+                  </p>
+                  <ul className="space-y-1">
+                    {[...new Set(suggestions)].slice(0, 3).map((s, i) => (
+                      <li key={i}>
+                        <button
+                          type="button"
+                          className="w-full text-left text-sm text-foreground hover:bg-muted/50"
+                          onClick={() => {
+                            setQuery(s);
+                            inputRef.current?.focus();
+                          }}
+                        >
+                          {s}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {results.length > 0 && (
+                <div className="px-4 py-3">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Products
+                  </p>
+                  <ul className="space-y-2">
+                    {results.slice(0, 4).map((product) => (
+                      <li key={product.id}>
+                        <Link
+                          href={`/products/${product.slug}`}
+                          onClick={onClose}
+                          className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-muted/50"
+                        >
+                          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
+                            <Image
+                              src={product.image}
+                              alt={product.imageAlt}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-foreground">
+                              {product.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatPricePKR(product.price)}
+                            </p>
+                          </div>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
           )}
 
           <div className="border-t border-border px-4 py-3">

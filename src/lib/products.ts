@@ -43,6 +43,7 @@ export async function getFeaturedProducts(): Promise<Product[]> {
   const list = await prisma.product.findMany({
     where: { featured: true },
     orderBy: { createdAt: "desc" },
+    take: 8,
   });
   return list.map(mapPrismaProduct);
 }
