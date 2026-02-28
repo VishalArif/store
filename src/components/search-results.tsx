@@ -1,16 +1,33 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
-import { searchProducts } from "@/data/mock-products";
+import type { Product } from "@/types/product";
 
 interface SearchResultsProps {
   query: string;
 }
 
 export function SearchResults({ query }: SearchResultsProps) {
-  const results = query.trim() ? searchProducts(query) : [];
+  const [results, setResults] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(!!query.trim());
+
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    fetch(`/api/products/search?q=${encodeURIComponent(q)}`)
+      .then((res) => res.json())
+      .then((data: Product[]) => setResults(Array.isArray(data) ? data : []))
+      .catch(() => setResults([]))
+      .finally(() => setLoading(false));
+  }, [query]);
 
   if (!query.trim()) {
     return (
@@ -18,6 +35,10 @@ export function SearchResults({ query }: SearchResultsProps) {
         Enter a search term to find products.
       </p>
     );
+  }
+
+  if (loading) {
+    return <p className="text-muted-foreground">Loading…</p>;
   }
 
   if (results.length === 0) {

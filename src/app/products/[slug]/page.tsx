@@ -1,24 +1,68 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { ProductDetailForm } from "@/components/product-detail-form";
 import {
   getProductBySlug,
   getRelatedProducts,
-} from "@/data/mock-products";
+  getProductSlugs,
+} from "@/lib/products";
+import { SITE_NAME, SITE_URL } from "@/config/site";
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }
 
+function absoluteImageUrl(url: string): string {
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `${SITE_URL}${url.startsWith("/") ? url : `/${url}`}`;
+}
+
+export async function generateStaticParams() {
+  const slugs = await getProductSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
+  if (!product) {
+    return { title: "Product Not Found" };
+  }
+  const title = product.name;
+  const description =
+    product.description ||
+    `Buy ${product.name} at ${SITE_NAME}. Premium headphones and audio gear.`;
+  const imageUrl = product.image ? absoluteImageUrl(product.image) : undefined;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: imageUrl
+        ? [{ url: imageUrl, alt: product.imageAlt || product.name }]
+        : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
+
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     notFound();
   }
 
-  const relatedProducts = getRelatedProducts(product.id, 4);
+  const relatedProducts = await getRelatedProducts(product.id, 4);
 
   return (
     <div className="min-h-screen bg-background">

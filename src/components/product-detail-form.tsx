@@ -12,11 +12,11 @@ import { ProductCard } from "@/components/product-card";
 import { useCart } from "@/context/cart-context";
 import { formatPricePKR } from "@/lib/format-price";
 import { cn } from "@/lib/utils";
-import type { MockProduct } from "@/data/mock-products";
+import type { Product } from "@/types/product";
 
 interface ProductDetailFormProps {
-  product: MockProduct;
-  relatedProducts: MockProduct[];
+  product: Product;
+  relatedProducts: Product[];
 }
 
 export function ProductDetailForm({ product, relatedProducts }: ProductDetailFormProps) {

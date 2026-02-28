@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter, Lora } from "next/font/google";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { CartProvider } from "@/context/cart-context";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/config/site";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -19,9 +20,29 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "SoundForge Audio — Premium Headphones",
-  description:
-    "Premium headphones for music lovers, gamers, and creators. Shop over-ear, in-ear, wireless, and gaming headsets.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} — Premium Headphones`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    locale: "en",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} — Premium Headphones`,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — Premium Headphones`,
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

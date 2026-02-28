@@ -1,8 +1,21 @@
+import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
 import { ProductsListing } from "@/components/products-listing";
-import { allProducts } from "@/data/mock-products";
+import { getAllProducts } from "@/lib/products";
+import { SITE_NAME, SITE_DESCRIPTION } from "@/config/site";
 
-export default function ProductsPage() {
+export const metadata: Metadata = {
+  title: "Products",
+  description: `Browse our full collection of premium headphones and audio gear. ${SITE_DESCRIPTION}`,
+  openGraph: {
+    title: `Products | ${SITE_NAME}`,
+    description: `Browse our full collection of premium headphones and audio gear.`,
+  },
+};
+
+export default async function ProductsPage() {
+  const products = await getAllProducts();
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -19,7 +32,7 @@ export default function ProductsPage() {
             Products
           </h1>
 
-          <ProductsListing products={allProducts} />
+          <ProductsListing products={products} />
         </section>
       </main>
 

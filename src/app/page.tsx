@@ -4,9 +4,11 @@ import { SiteHeader } from "@/components/site-header";
 import { HeroSection } from "@/components/hero-section";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
-import { featuredProducts } from "@/data/mock-products";
+import { getFeaturedProducts } from "@/lib/products";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const featuredProducts = await getFeaturedProducts();
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />

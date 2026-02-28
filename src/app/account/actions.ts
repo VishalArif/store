@@ -21,7 +21,14 @@ export async function signInAction(formData: FormData) {
   });
 
   if (result?.error) return { error: "Invalid email or password." };
-  return { success: true, url: typeof callbackUrl === "string" ? callbackUrl : "/" };
+
+  const user = await prisma.user.findUnique({
+    where: { email: email.trim().toLowerCase() },
+    select: { role: true },
+  });
+  const redirectUrl =
+    user?.role === "admin" ? "/admin" : (typeof callbackUrl === "string" ? callbackUrl : "/");
+  return { success: true, url: redirectUrl };
 }
 
 export async function registerAction(formData: FormData) {

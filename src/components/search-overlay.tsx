@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, X, ArrowRight } from "lucide-react";
-import { searchProducts } from "@/data/mock-products";
+import type { Product } from "@/types/product";
 import { formatPricePKR } from "@/lib/format-price";
 import { cn } from "@/lib/utils";
 
@@ -18,9 +18,28 @@ export function SearchOverlay({ open, onClose }: SearchOverlayProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Product[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
 
-  const results = query.trim() ? searchProducts(query) : [];
   const hasQuery = query.trim().length > 0;
+
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setResults([]);
+      return;
+    }
+    const ac = new AbortController();
+    setSearchLoading(true);
+    fetch(`/api/products/search?q=${encodeURIComponent(q)}`, {
+      signal: ac.signal,
+    })
+      .then((res) => res.json())
+      .then((data: Product[]) => setResults(Array.isArray(data) ? data : []))
+      .catch(() => setResults([]))
+      .finally(() => setSearchLoading(false));
+    return () => ac.abort();
+  }, [query]);
 
   // Suggestions: show the query and first product name if any
   const suggestions = hasQuery

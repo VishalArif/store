@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Search, User, ShoppingBag, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SearchOverlay } from "@/components/search-overlay";
@@ -16,10 +17,12 @@ const navLinks = [
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const { data: session, status } = useSession();
   const { totalItems } = useCart();
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isHome = pathname === "/";
+  const isLoggedIn = status === "authenticated" && !!session?.user;
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -122,10 +125,10 @@ export function SiteHeader() {
               "hidden md:inline-flex size-9 shrink-0",
               isHome && "text-white hover:bg-white/10 hover:text-white"
             )}
-            aria-label="Account"
+            aria-label={isLoggedIn ? "Account" : "Sign in"}
             asChild
           >
-            <Link href="/login">
+            <Link href={isLoggedIn ? "/account" : "/login"}>
               <User className="size-[1.25rem]" />
             </Link>
           </Button>
@@ -221,7 +224,7 @@ export function SiteHeader() {
             })}
             <li className={cn("pt-2 mt-2", isHome ? "border-white/15" : "border-border", "border-t")}>
               <Link
-                href="/login"
+                href={isLoggedIn ? "/account" : "/login"}
                 className={cn(
                   "flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium",
                   isHome
@@ -231,7 +234,7 @@ export function SiteHeader() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <User className="size-5" />
-                Account
+                {isLoggedIn ? "Account" : "Sign in"}
               </Link>
             </li>
           </ul>

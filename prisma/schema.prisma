@@ -18,3 +18,21 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+model Product {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  price          Int
+  compareAtPrice Int?
+  image          String
+  imageAlt       String
+  onSale         Boolean  @default(false)
+  description    String?
+  images         Json?    // array of image URLs
+  colors         Json?    // array of { name, hex }
+  connection     Json?    // array of strings
+  featured       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

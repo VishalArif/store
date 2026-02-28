@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { MockProduct } from "@/data/mock-products";
+import type { Product } from "@/types/product";
 
 const SORT_OPTIONS = [
   { value: "name-asc", label: "Alphabetically, A-Z" },
@@ -33,7 +33,7 @@ const PRICE_OPTIONS = [
 ] as const;
 
 interface ProductsListingProps {
-  products: MockProduct[];
+  products: Product[];
 }
 
 export function ProductsListing({ products }: ProductsListingProps) {
@@ -57,11 +57,11 @@ export function ProductsListing({ products }: ProductsListingProps) {
     }
 
     if (sort === "name-asc")
-      list.sort((a, b) => a.name.localeCompare(b.name));
+      list = list.toSorted((a, b) => a.name.localeCompare(b.name));
     else if (sort === "name-desc")
-      list.sort((a, b) => b.name.localeCompare(a.name));
-    else if (sort === "price-asc") list.sort((a, b) => a.price - b.price);
-    else if (sort === "price-desc") list.sort((a, b) => b.price - a.price);
+      list = list.toSorted((a, b) => b.name.localeCompare(a.name));
+    else if (sort === "price-asc") list = list.toSorted((a, b) => a.price - b.price);
+    else if (sort === "price-desc") list = list.toSorted((a, b) => b.price - a.price);
 
     return list;
   }, [products, sort, availability, priceRange]);
