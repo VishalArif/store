@@ -26,7 +26,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 pb-2">
           <div>
             <CardTitle>All products</CardTitle>
             <CardDescription>
@@ -45,8 +45,8 @@ export default async function AdminDashboardPage() {
               No products yet. Add one to get started.
             </p>
           ) : (
-            <div className="overflow-hidden rounded-lg border border-border">
-              <table className="w-full text-left text-sm">
+            <div className="overflow-x-auto rounded-lg border border-border">
+              <table className="w-full min-w-[600px] text-left text-sm">
                 <thead className="border-b border-border bg-muted/50">
                   <tr>
                     <th className="p-3 font-medium">Name</th>

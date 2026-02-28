@@ -97,8 +97,8 @@ export default async function AdminOrderDetailPage({
           <CardTitle className="text-lg">Items</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-hidden rounded-lg border border-border">
-            <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="w-full min-w-[480px] text-left text-sm">
               <thead className="border-b border-border bg-muted/50">
                 <tr>
                   <th className="p-3 font-medium">Product</th>

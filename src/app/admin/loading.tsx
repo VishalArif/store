@@ -23,8 +23,8 @@ export default function AdminLoading() {
             <Skeleton className="h-9 w-28" />
           </CardHeader>
           <CardContent>
-            <div className="overflow-hidden rounded-lg border border-border">
-              <table className="w-full text-left text-sm table-fixed">
+            <div className="overflow-x-auto rounded-lg border border-border">
+              <table className="w-full min-w-[600px] text-left text-sm table-fixed">
                 <colgroup>
                   <col className="w-[25%]" />
                   <col className="w-[25%]" />
